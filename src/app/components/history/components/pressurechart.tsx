@@ -9,26 +9,26 @@ interface HealthData {
   year: number;
   blood_pressure: {
     systolic: {
-        value: number;
-        levels: "Higher than Average" | "Normal" | "Lower than Average";
+      value: number;
+      levels: "Higher than Average" | "Normal" | "Lower than Average";
     };
     diastolic: {
-        value: number;
-        levels: "Higher than Average" | "Normal" | "Lower than Average";
-      };
+      value: number;
+      levels: "Higher than Average" | "Normal" | "Lower than Average";
     };
+  };
   heart_rate: {
-        value: number;
-        levels: "Higher than Average" | "Normal" | "Lower than Average";
-    };
+    value: number;
+    levels: "Higher than Average" | "Normal" | "Lower than Average";
+  };
   respiratory_rate: {
-        value: number;
-        levels: "Higher than Average" | "Normal" | "Lower than Average";
-    };
+    value: number;
+    levels: "Higher than Average" | "Normal" | "Lower than Average";
+  };
   temperature: {
-        value: number;
-        levels: "Higher than Average" | "Normal" | "Lower than Average";
-    };
+    value: number;
+    levels: "Higher than Average" | "Normal" | "Lower than Average";
+  };
 }
 
 interface PressureDataSet {
@@ -52,7 +52,6 @@ const PRESSURE_PARAMETERS = {
   Systolic: { minNormal: 90, maxNormal: 120 },
   Diastolic: { minNormal: 80, maxNormal: 90 }
 } as const;
-
 
 type PressureParameterKey = keyof typeof PRESSURE_PARAMETERS;
 
@@ -78,9 +77,21 @@ const getRating = (label: PressureParameterKey, value: number): Rating => {
   return Rating.Normal;
 };
 
+// Simple debounce function
+function debounce<T extends (...args: unknown[]) => void>(func: T, wait: number) {
+  let timeout: ReturnType<typeof setTimeout>;
+  const debounced = (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+  debounced.cancel = () => clearTimeout(timeout);
+  return debounced;
+}
+
 export default function PressureChart({ data }: PressureChartProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => {
@@ -91,15 +102,12 @@ export default function PressureChart({ data }: PressureChartProps) {
     });
   }, [data]);
 
-  const chronologicalData = useMemo(() => 
-    sortedData.slice(0, 6).reverse(), 
-  [sortedData]);
+  const chronologicalData = useMemo(() => sortedData.slice(0, 6).reverse(), [sortedData]);
 
-  const labels = useMemo(() => 
-    chronologicalData.map(entry => 
-      `${entry.month.substring(0, 3)}. ${entry.year}`
-    ), 
-  [chronologicalData]);
+  const labels = useMemo(
+    () => chronologicalData.map(entry => `${entry.month.substring(0, 3)}. ${entry.year}`),
+    [chronologicalData]
+  );
 
   const pressureData: PressureDataSet[] = useMemo(() => [
     {
@@ -128,19 +136,36 @@ export default function PressureChart({ data }: PressureChartProps) {
     }
   ], [chronologicalData]);
 
+  // Use useMemo instead of useCallback to avoid the dependency warning.
+  const handleResize = useMemo(
+    () =>
+      debounce(() => {
+        if (chartInstance.current) {
+          chartInstance.current.resize();
+        }
+      }, 100),
+    []
+  );
+
   useEffect(() => {
-    const resizeCanvas = () => {
-      if (chartRef.current) {
-        const canvas = chartRef.current;
-        const container = canvas.parentElement;
-        if (!container) return;
-        
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        chartInstance.current?.resize();
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    return () => {
+      resizeObserver.disconnect();
+      if (handleResize.cancel) {
+        handleResize.cancel();
       }
     };
+  }, [handleResize]);
 
+  // Chart creation useEffect
+  useEffect(() => {
     if (chartRef.current) {
       const ctx = chartRef.current.getContext('2d');
       if (ctx) {
@@ -166,29 +191,38 @@ export default function PressureChart({ data }: PressureChartProps) {
               },
               x: { grid: { display: false } }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+              legend: { display: false }
+            },
+            layout: {
+              padding: {
+                top: 10,
+                right: 10,
+                bottom: 10,
+                left: 10
+              }
+            }
           }
         });
-
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        return () => {
-          chartInstance.current?.destroy();
-          window.removeEventListener('resize', resizeCanvas);
-        };
       }
     }
-  }, [data, labels, pressureData]);
+
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+    };
+  }, [labels, pressureData]);
 
   return (
-    <article className="flex bg-[#F4F0FE] w-full h-[290px] mx-6 rounded-md">
-      <section className='w-[70%]'>
-        <h1 className='p-3 text-lg font-bold'>Blood Pressure</h1>
-        <div className="p-3 h-[calc(100%-56px)]">
-          <canvas ref={chartRef}></canvas>
+    <article className="flex md:flex-row items-center flex-col bg-[#F4F0FE] w-[calc(100%-48px)] md:h-fit h-auto mx-6 rounded-md gap-5 md:pb-0 pb-8 md:gap-0">
+      <section className='md:w-[70%] w-full m-2'>
+        <h1 className='p-6 text-lg font-bold'>Blood Pressure</h1>
+        <div ref={containerRef} className="flex relative w-full lg:h-[300px] h-[200px] md:px-0 px-4">
+          <canvas ref={chartRef} className="w-full h-full"></canvas>
         </div>
       </section>
-      <aside className='flex flex-col justify-center w-[30%] m-3 mt-3 gap-3'>
+      <aside className='flex md:items-center md:flex-col md:justify-center justify-around md:w-[30%] w-full h-full md:gap-3'>
         {pressureData.map((pressureItem, index) => {
           const lastValue = pressureItem.data.slice(-1)[0];
           const rating = getRating(pressureItem.label as PressureParameterKey, lastValue);
@@ -201,7 +235,7 @@ export default function PressureChart({ data }: PressureChartProps) {
                 rating={rating}
               />
               {index !== pressureData.length - 1 && (
-                <div className="bg-gray-300 w-full h-[2px] my-3"></div>
+                <div className="bg-gray-300 md:w-[80%] md:h-[2px] h-[50px] w-[2px] my-3 -mx-10 md:mx-0"></div>
               )}
             </React.Fragment>
           );

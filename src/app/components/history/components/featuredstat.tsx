@@ -30,23 +30,29 @@ export default function FeaturedStat({
   };
 
   return (
-    <article
-      style={{ backgroundColor: background }}
-      className="flex flex-col items-center justify-center w-[100%] h-[100%] rounded-md xl:gap-0 gap-1 md:mb-0 mb-4"
-    >
-      <figure className="p-3 md:scale-100 scale-90">
-        <Image
-          src={imageSrc}
-          height={60}
-          width={60}
-          alt={imageAlt}
-        />
-      </figure>
-      <h1 className="md:text-lg text-sm px-3">{title}</h1>
-      <h2 className="md:text-xl text-sm font-extrabold">{value + " " + unit}</h2>
-      <section className=" pb-4">
+      <article 
+        style={{ backgroundColor: background }}
+        className="flex md:flex-col justify-between items-center w-[100%] h-[100%] rounded-md 2xl:py-4 xl:gap-0 md:gap-1 md:py-0 py-2"
+      >
+      <div className="flex flex-col items-center md:w-full w-1/3">
+        <figure className="md:p-3 p-2 2xl:scale-110 md:scale-100 scale-90">
+          <Image
+            src={imageSrc}
+            height={60}
+            width={60}
+            alt={imageAlt}
+          />
+        </figure>
+        <h1 className="md:text-lg text-sm px-3">{title}</h1>
+      </div>
+
+      <h2 className="md:text-xl text-lg font-extrabold md:w-full  w-1/3 text-center">
+        {value + " " + unit}
+      </h2>
+
+      <section className=" md:w-full w-1/3 flex md:justify-center justify-end md:pb-4 pr-4">
         <AverageComp rating={getRating()} />
       </section>
     </article>
-  );
+  )
 }

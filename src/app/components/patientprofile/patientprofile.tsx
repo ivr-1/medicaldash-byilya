@@ -32,7 +32,7 @@ export default function PatientProfile({
 
   return (
     <Card header="">
-      <div className="flex flex-col h-full items-center justify-center gap-6 mx-4 lg:my-0 my-8">
+      <div className="flex flex-col h-full items-center justify-center gap-6 2xl:gap-16 mx-4 lg:my-0 my-8">
         <section className="flex flex-col w-full items-center gap-6">
           <Image
             src={photo}

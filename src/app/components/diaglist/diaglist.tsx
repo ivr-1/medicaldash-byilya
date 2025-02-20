@@ -18,7 +18,7 @@ export default function DiagList({ diagnostic_list }: DiagListProps) {
 
                 <header className="sticky top-0 z-10 bg-white">
                     <div className="grid grid-cols-[2fr_3fr_1fr] items-center gap-4 px-6 bg-[#F6F7F8] h-[48px] rounded-full font-bold md:text-sm text-[12px]">
-                        <div>Problem/Diagnosis</div>
+                        <div>Diagnosis</div>
                         <div>Description</div>
                         <div>Status</div>
                     </div>

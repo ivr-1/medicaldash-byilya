@@ -15,7 +15,7 @@ const PressureFeature: React.FC<PressureFeatureProps> = ({
   rating,
 }) => {
   return (
-    <article className="flex flex-col gap-2">
+    <article className="flex flex-col items-center gap-2">
       <h1 className="flex items-center text-sm font-bold gap-1">
         <span
           style={{ backgroundColor: bgColor }}

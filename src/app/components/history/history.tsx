@@ -47,12 +47,12 @@ export default function History ({history}:HistoryProps) {
         <Card
             header="Diagnosis History"
         >
-            <div className="flex flex-col gap-3 h-full xl:justify-normal justify-center">
+            <div className="flex flex-col gap-3 h-full xl:justify-normal justify-center xl:mb-0 mb-4">
                 <section className="flex items-center">
                     <PressureChart data={history}/>
                 </section>
 
-                <section className="flex gap-3 mx-6 items-center">
+                <section className="flex md:flex-row flex-col gap-3 mx-6 items-center">
                     <FeaturedStat 
                         imageSrc={respImg}
                         imageAlt="lungs"
